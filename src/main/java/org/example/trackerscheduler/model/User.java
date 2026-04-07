@@ -1,4 +1,6 @@
 package org.example.trackerscheduler.model;
 
-public class User {
-}
+public record User(
+        Long id,
+        String email
+) {}

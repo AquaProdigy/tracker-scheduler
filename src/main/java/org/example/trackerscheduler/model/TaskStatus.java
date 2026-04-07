@@ -1,4 +1,6 @@
 package org.example.trackerscheduler.model;
 
-public class TaskStatus {
+public enum TaskStatus {
+    ONGOING,
+    COMPLETED
 }

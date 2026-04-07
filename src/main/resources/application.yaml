@@ -1,1 +1,2 @@
-spring.application.name=tracker-scheduler
+internal:
+  api-key: "12345678"
