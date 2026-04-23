@@ -1,6 +1,7 @@
 package org.example.trackerscheduler.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.trackerscheduler.model.EmailLetterModel;
 import org.example.trackerscheduler.model.Task;
 import org.example.trackerscheduler.model.TaskStatus;
@@ -17,13 +18,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class TaskSchedulerService {
     private static final Integer TASK_IN_DESCRIPTION = 5;
     private static final String TEXT_FOR_ONGOING = "Today you have %d tasks in work";
     private static final String TEXT_FOR_COMPLETED = "Today you completed %d tasks";
     private static final String TITLE_TEXT_LETTER = "Your daily task report";
-    private static final LocalDateTime TASKS_FOR_DAYS = LocalDateTime.now().toLocalDate().atStartOfDay();
 
     @Value("${internal.api-key}")
     private String internalApiKey;
@@ -31,17 +32,19 @@ public class TaskSchedulerService {
     private final RestClient restClient;
     private final KafkaSenderService kafkaSenderService;
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(cron = "0 0 0 * * *")
     public void sendDailyReport() {
         List<User> users = getUsers();
+        log.info("Sending Daily Report for {} users", users.size());
 
         for (User user : users) {
             List<Task> tasks = getTasksByUser(user);
+            log.info("Sending Daily Report for {} tasks", tasks.size());
 
             Optional<String> body = createStringForEmail(tasks);
-
+            log.info(body.toString());
             if (body.isEmpty()) {
-                return;
+                continue;
             }
 
             kafkaSenderService.sendMessageToKafka(
@@ -66,7 +69,7 @@ public class TaskSchedulerService {
                     return task.status() == TaskStatus.COMPLETED;
                 })
                 .filter(task -> {
-                    return task.updatedAt().isAfter(TASKS_FOR_DAYS);
+                    return task.updatedAt().isAfter(getStartOfDay());
                 })
                 .toList();
 
@@ -93,6 +96,10 @@ public class TaskSchedulerService {
         }
 
         return Optional.of(body.toString());
+    }
+
+    private LocalDateTime getStartOfDay() {
+        return LocalDateTime.now().toLocalDate().atStartOfDay();
     }
 
     private List<Task> getTasksByUser(User user) {
