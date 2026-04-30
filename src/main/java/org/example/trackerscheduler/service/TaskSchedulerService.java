@@ -29,6 +29,12 @@ public class TaskSchedulerService {
     @Value("${internal.api-key}")
     private String internalApiKey;
 
+    @Value("${services.auth-url}")
+    private String authUrl;
+
+    @Value("${services.task-url}")
+    private String taskUrl;
+
     private final RestClient restClient;
     private final KafkaSenderService kafkaSenderService;
 
@@ -104,7 +110,7 @@ public class TaskSchedulerService {
 
     private List<Task> getTasksByUser(User user) {
         return restClient.get()
-                .uri("http://localhost:8082/internal/tasks?userId=" + user.id())
+                .uri(taskUrl + "/internal/tasks?userId=" + user.id())
                 .header("X-Internal-Api-Key", internalApiKey)
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<Task>>() {});
@@ -112,7 +118,7 @@ public class TaskSchedulerService {
 
     private List<User> getUsers() {
         return restClient.get()
-                .uri("http://localhost:8081/internal/users")
+                .uri(authUrl + "/internal/users")
                 .header("X-Internal-Api-Key", internalApiKey)
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<User>>() {});
