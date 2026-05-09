@@ -1,5 +1,3 @@
-internal:
-  api-key: ${INTERNAL_API_KEY}
 spring:
   kafka:
     bootstrap-servers: ${KAFKA_HOST}
@@ -7,11 +5,18 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-Kafka:
+kafka:
   topic: ${KAFKA_TOPIC_NAME}
 server:
   port: 8083
 
-services:
+services-url:
   auth-url: ${AUTH_SERVICE_URL}
   task-url: ${TASK_SERVICE_URL}
+  auth-endpoint-email: ${TASK_SERVICE_DAILY_SUMMARY_ENDPOINT}
+  task-endpoint-daily-summary: ${AUTH_SERVICE_EMAIL_ENDPOINT}
+
+internal:
+  api-key: ${INTERNAL_API_KEY}
+  header-name: ${INTERNAL_NAME_HEADER}
+

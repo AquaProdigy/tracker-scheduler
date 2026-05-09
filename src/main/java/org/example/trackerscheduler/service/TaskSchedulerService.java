@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trackerscheduler.client.TaskServiceClient;
 import org.example.trackerscheduler.client.UserEmailServiceClient;
+import org.example.trackerscheduler.config.endpoint.ServicesUrlEndpoints;
 import org.example.trackerscheduler.model.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -26,15 +27,6 @@ public class TaskSchedulerService {
     private static final String TEXT_FOR_IN_PROGRESS= "Today you have %d tasks in work";
     private static final String TEXT_FOR_COMPLETED = "Today you completed %d tasks";
     private static final String TITLE_TEXT_LETTER = "Your daily task report";
-
-    @Value("${internal.api-key}")
-    private String internalApiKey;
-
-    @Value("${services.auth-url}")
-    private String authUrl;
-
-    @Value("${services.task-url}")
-    private String taskUrl;
 
     private final TaskServiceClient taskServiceClient;
     private final UserEmailServiceClient userEmailServiceClient;

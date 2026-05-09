@@ -1,8 +1,8 @@
 package org.example.trackerscheduler.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.trackerscheduler.config.kafka.KafkaProperties;
 import org.example.trackerscheduler.model.EmailLetterModel;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -10,11 +10,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class KafkaSenderService {
     private final KafkaTemplate<String, EmailLetterModel> kafkaTemplate;
-
-    @Value("${kafka.topic}")
-    private String kafkaTopic;
+    private final KafkaProperties kafkaProperties;
 
     public void sendMessageToKafka(EmailLetterModel emailLetterModel) {
-        kafkaTemplate.send(kafkaTopic, emailLetterModel);
+        kafkaTemplate.send(kafkaProperties.getTopic(), emailLetterModel);
     }
 }

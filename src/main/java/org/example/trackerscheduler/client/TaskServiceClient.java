@@ -4,11 +4,12 @@ import org.example.trackerscheduler.config.FeignConfig;
 import org.example.trackerscheduler.model.UserDailyTaskSummary;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+
 
 import java.util.List;
 
-@FeignClient(name = "tracker-task", url = "${services.task-url}", configuration = FeignConfig.class)
+@FeignClient(name = "tracker-task", url = "${services.task-url}${services-url.task-endpoint-daily-summary}",
+        configuration = FeignConfig.class)
 public interface TaskServiceClient {
 
     @GetMapping
