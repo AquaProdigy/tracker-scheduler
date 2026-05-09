@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(name = "tracker-auth", url = "${services.auth-url}${services-url.auth-endpoint-email}",
+@FeignClient(name = "tracker-auth", url = "${services.auth-url}",
         configuration = FeignConfig.class)
 public interface UserEmailServiceClient {
 
-    @PostMapping
+    @PostMapping("${services-url.auth-endpoint-email}")
     List<InternalUserEmailDto> getEmailByIds(@RequestBody List<Long> ids);
 
 }

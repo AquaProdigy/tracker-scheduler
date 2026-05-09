@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
-@FeignClient(name = "tracker-task", url = "${services.task-url}${services-url.task-endpoint-daily-summary}",
+@FeignClient(name = "tracker-task", url = "${services.task-url}",
         configuration = FeignConfig.class)
 public interface TaskServiceClient {
 
-    @GetMapping
+    @GetMapping("${services-url.task-endpoint-daily-summary}")
     List<UserDailyTaskSummary> getSummaryTasks();
 
 }
