@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(name = "tracker-auth", url = "${services.auth-url}",
+@FeignClient(name = "tracker-auth", url = "${services-url.auth-url}",
         configuration = FeignConfig.class)
 public interface UserEmailServiceClient {
 

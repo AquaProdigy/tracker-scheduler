@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
-@FeignClient(name = "tracker-task", url = "${services.task-url}",
+@FeignClient(name = "tracker-task", url = "${services-url.task-url}",
         configuration = FeignConfig.class)
 public interface TaskServiceClient {
 
