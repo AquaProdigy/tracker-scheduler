@@ -2,10 +2,9 @@ package org.example.trackerscheduler.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.trackerscheduler.model.EmailLetterModel;
-import org.example.trackerscheduler.model.Task;
-import org.example.trackerscheduler.model.TaskStatus;
-import org.example.trackerscheduler.model.User;
+import org.example.trackerscheduler.client.TaskServiceClient;
+import org.example.trackerscheduler.client.UserEmailServiceClient;
+import org.example.trackerscheduler.model.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,14 +14,16 @@ import org.springframework.web.client.RestClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class TaskSchedulerService {
     private static final Integer TASK_IN_DESCRIPTION = 5;
-    private static final String TEXT_FOR_ONGOING = "Today you have %d tasks in work";
+    private static final String TEXT_FOR_IN_PROGRESS= "Today you have %d tasks in work";
     private static final String TEXT_FOR_COMPLETED = "Today you completed %d tasks";
     private static final String TITLE_TEXT_LETTER = "Your daily task report";
 
@@ -35,92 +36,71 @@ public class TaskSchedulerService {
     @Value("${services.task-url}")
     private String taskUrl;
 
-    private final RestClient restClient;
+    private final TaskServiceClient taskServiceClient;
+    private final UserEmailServiceClient userEmailServiceClient;
     private final KafkaSenderService kafkaSenderService;
 
     @Scheduled(cron = "0 0 0 * * *")
     public void sendDailyReport() {
-        List<User> users = getUsers();
-        log.info("Sending Daily Report for {} users", users.size());
+        List<UserDailyTaskSummary> tasksToday = taskServiceClient.getSummaryTasks();
 
-        for (User user : users) {
-            List<Task> tasks = getTasksByUser(user);
-            log.info("Sending Daily Report for {} tasks", tasks.size());
+        List<Long> ids = tasksToday.stream()
+                .map(UserDailyTaskSummary::userId)
+                .toList();
 
-            Optional<String> body = createStringForEmail(tasks);
-            log.info(body.toString());
-            if (body.isEmpty()) {
-                continue;
+        Map<Long, String> emailById = userEmailServiceClient.getEmailByIds(ids)
+                .stream()
+                .collect(Collectors.toMap(InternalUserEmailDto::id, InternalUserEmailDto::email));
+
+        tasksToday.forEach(summary -> {
+            String email = emailById.get(summary.userId());
+
+            if (email == null) {
+                return;
+            }
+
+            boolean hasCompleted = !summary.completedTasks().isEmpty();
+            boolean hasInProgress = !summary.inProgressTasks().isEmpty();
+
+            if (!hasCompleted || !hasInProgress) {
+                return;
             }
 
             kafkaSenderService.sendMessageToKafka(
                     new EmailLetterModel(
-                            user.email(),
-                            TITLE_TEXT_LETTER,
-                            body.get()
+                        email,
+                        TITLE_TEXT_LETTER,
+                        buildDescription(summary)
                     )
             );
-        }
+
+        });
 
     }
 
-    private Optional<String> createStringForEmail(List<Task> tasks) {
-        List<Task> ongoingTasks = tasks.stream()
-                .filter(task -> {
-                  return task.status() == TaskStatus.ONGOING;
-        }).toList();
+    private String buildDescription(UserDailyTaskSummary summary) {
+        StringBuilder description = new StringBuilder();
 
-        List<Task> completedTasks = tasks.stream()
-                .filter(task -> {
-                    return task.status() == TaskStatus.COMPLETED;
-                })
-                .filter(task -> {
-                    return task.updatedAt().isAfter(getStartOfDay());
-                })
-                .toList();
+        if (!summary.completedTasks().isEmpty()) {
+            description.append(TEXT_FOR_COMPLETED.formatted(summary.completedTasks().size()));
 
-        if (ongoingTasks.isEmpty() &&  completedTasks.isEmpty()) {
-            return Optional.empty();
-        }
-
-        StringBuilder body = new StringBuilder();
-
-        if (!ongoingTasks.isEmpty()) {
-            body.append(TEXT_FOR_ONGOING.formatted(ongoingTasks.size())).append(System.lineSeparator());
-
-            ongoingTasks.stream().limit(TASK_IN_DESCRIPTION).forEach(task -> {
-                body.append(task.title()).append(System.lineSeparator());
+            summary.completedTasks().stream().limit(TASK_IN_DESCRIPTION).forEach(task -> {
+                description.append(task.title());
             });
         }
 
-        if (!completedTasks.isEmpty()) {
-            body.append(TEXT_FOR_COMPLETED.formatted(completedTasks.size())).append(System.lineSeparator());
+        if (!summary.inProgressTasks().isEmpty()) {
+            description.append(TEXT_FOR_IN_PROGRESS.formatted(summary.inProgressTasks().size()));
 
-            completedTasks.stream().limit(TASK_IN_DESCRIPTION).forEach(task -> {
-                body.append(task.title()).append(System.lineSeparator());
+            summary.completedTasks().stream().limit(TASK_IN_DESCRIPTION).forEach(task -> {
+                description.append(task.title());
             });
         }
 
-        return Optional.of(body.toString());
+        return description.toString();
     }
 
-    private LocalDateTime getStartOfDay() {
-        return LocalDateTime.now().toLocalDate().atStartOfDay();
-    }
 
-    private List<Task> getTasksByUser(User user) {
-        return restClient.get()
-                .uri(taskUrl + "/internal/tasks?userId=" + user.id())
-                .header("X-Internal-Api-Key", internalApiKey)
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<Task>>() {});
-    }
 
-    private List<User> getUsers() {
-        return restClient.get()
-                .uri(authUrl + "/internal/users")
-                .header("X-Internal-Api-Key", internalApiKey)
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<User>>() {});
-    }
+
 }
