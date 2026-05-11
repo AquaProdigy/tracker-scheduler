@@ -1,7 +1,7 @@
 package org.example.trackerscheduler.client;
 
 import org.example.trackerscheduler.config.FeignConfig;
-import org.example.trackerscheduler.model.user.InternalUserEmailDto;
+import org.example.trackerscheduler.dto.user.InternalUserEmailDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

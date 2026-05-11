@@ -1,4 +1,4 @@
-package org.example.trackerscheduler.model.user;
+package org.example.trackerscheduler.dto.user;
 
 public record InternalUserEmailDto(
         Long id,

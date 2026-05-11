@@ -1,6 +1,6 @@
-package org.example.trackerscheduler.model.user;
+package org.example.trackerscheduler.dto.user;
 
-import org.example.trackerscheduler.model.task.TaskSummaryDto;
+import org.example.trackerscheduler.dto.task.TaskSummaryDto;
 
 import java.util.List;
 

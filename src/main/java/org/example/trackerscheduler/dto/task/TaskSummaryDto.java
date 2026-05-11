@@ -1,4 +1,4 @@
-package org.example.trackerscheduler.model.task;
+package org.example.trackerscheduler.dto.task;
 
 public record TaskSummaryDto(
         String title

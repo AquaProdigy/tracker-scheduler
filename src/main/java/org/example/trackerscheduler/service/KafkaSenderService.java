@@ -3,7 +3,7 @@ package org.example.trackerscheduler.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trackerscheduler.config.kafka.KafkaProperties;
-import org.example.trackerscheduler.model.email.EmailLetterModel;
+import org.example.trackerscheduler.dto.email.EmailLetterModel;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
