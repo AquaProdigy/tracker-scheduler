@@ -4,19 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.trackerscheduler.client.TaskServiceClient;
 import org.example.trackerscheduler.client.UserEmailServiceClient;
-import org.example.trackerscheduler.config.endpoint.ServicesUrlEndpoints;
-import org.example.trackerscheduler.model.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.example.trackerscheduler.model.email.EmailLetterModel;
+import org.example.trackerscheduler.model.task.TaskSummaryDto;
+import org.example.trackerscheduler.model.user.InternalUserEmailDto;
+import org.example.trackerscheduler.model.user.UserDailyTaskSummary;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,9 +27,13 @@ public class TaskSchedulerService {
     private final UserEmailServiceClient userEmailServiceClient;
     private final KafkaSenderService kafkaSenderService;
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "${scheduler.daily-report.cron}")
     public void sendDailyReport() {
         List<UserDailyTaskSummary> tasksToday = taskServiceClient.getSummaryTasks();
+
+        if (tasksToday.isEmpty()) {
+            return;
+        }
 
         List<Long> ids = tasksToday.stream()
                 .map(UserDailyTaskSummary::userId)
@@ -54,7 +53,7 @@ public class TaskSchedulerService {
             boolean hasCompleted = !summary.completedTasks().isEmpty();
             boolean hasInProgress = !summary.inProgressTasks().isEmpty();
 
-            if (!hasCompleted || !hasInProgress) {
+            if (!hasCompleted && !hasInProgress) {
                 return;
             }
 
@@ -74,22 +73,21 @@ public class TaskSchedulerService {
         StringBuilder description = new StringBuilder();
 
         if (!summary.completedTasks().isEmpty()) {
-            description.append(TEXT_FOR_COMPLETED.formatted(summary.completedTasks().size()));
-
-            summary.completedTasks().stream().limit(TASK_IN_DESCRIPTION).forEach(task -> {
-                description.append(task.title());
-            });
+            appendTasks(description, TEXT_FOR_COMPLETED, summary.completedTasks());
         }
 
         if (!summary.inProgressTasks().isEmpty()) {
-            description.append(TEXT_FOR_IN_PROGRESS.formatted(summary.inProgressTasks().size()));
-
-            summary.completedTasks().stream().limit(TASK_IN_DESCRIPTION).forEach(task -> {
-                description.append(task.title());
-            });
+            appendTasks(description, TEXT_FOR_IN_PROGRESS, summary.inProgressTasks());
         }
 
         return description.toString();
+    }
+
+    private void appendTasks(StringBuilder sb, String template, List<TaskSummaryDto> tasks) {
+        sb.append(template.formatted(tasks.size()));
+        tasks.stream()
+                .limit(TASK_IN_DESCRIPTION)
+                .forEach(task -> sb.append("• ").append(task.title()).append("\n"));
     }
 
 

@@ -1,4 +1,4 @@
-package org.example.trackerscheduler.model;
+package org.example.trackerscheduler.model.task;
 
 public enum TaskStatus {
     ONGOING,

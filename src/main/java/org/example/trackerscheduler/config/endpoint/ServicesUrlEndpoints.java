@@ -17,8 +17,4 @@ public class ServicesUrlEndpoints {
     private String authUrl;
     @NotBlank
     private String taskUrl;
-    @NotBlank
-    private String authEndpointEmail;
-    @NotBlank
-    private String taskEndpointDailySummary;
 }

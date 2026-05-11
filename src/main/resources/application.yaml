@@ -4,6 +4,18 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 5000
+            read-timeout: 5000
+            logger-level: basic
+
+scheduler:
+  daily-report:
+    cron: ${SCHEDULER_DAILY_REPORT_CRON}
 
 kafka:
   topic: ${KAFKA_TOPIC_NAME}
@@ -13,8 +25,6 @@ server:
 services-url:
   auth-url: ${AUTH_SERVICE_URL}
   task-url: ${TASK_SERVICE_URL}
-  auth-endpoint-email: ${TASK_SERVICE_DAILY_SUMMARY_ENDPOINT}
-  task-endpoint-daily-summary: ${AUTH_SERVICE_EMAIL_ENDPOINT}
 
 internal:
   api-key: ${INTERNAL_API_KEY}

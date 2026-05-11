@@ -1,4 +1,6 @@
-package org.example.trackerscheduler.model;
+package org.example.trackerscheduler.model.user;
+
+import org.example.trackerscheduler.model.task.TaskSummaryDto;
 
 import java.util.List;
 
