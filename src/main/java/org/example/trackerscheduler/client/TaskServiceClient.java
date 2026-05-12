@@ -1,6 +1,6 @@
 package org.example.trackerscheduler.client;
 
-import org.example.trackerscheduler.config.FeignConfig;
+import org.example.trackerscheduler.config.feign.FeignConfig;
 import org.example.trackerscheduler.dto.user.UserDailyTaskSummary;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
